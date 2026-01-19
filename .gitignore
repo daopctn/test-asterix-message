@@ -1,0 +1,24 @@
+# Build directories
+build/
+*.o
+*.a
+*.so
+
+# Qt MOC files
+moc_*.cpp
+*_autogen/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# IDE files
+.vscode/
+.idea/
+*.pro.user
+
+# Executables
+asterix-tcp-client
+*.exe

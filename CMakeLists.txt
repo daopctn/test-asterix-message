@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(asterix-tcp-client VERSION 1.0.0 LANGUAGES CXX)
+project(asterix-tcp VERSION 1.0.0 LANGUAGES CXX)
 
 # C++11 Standard
 set(CMAKE_CXX_STANDARD 11)
@@ -14,35 +14,78 @@ set(CMAKE_AUTOUIC ON)
 # Find Qt5
 find_package(Qt5 REQUIRED COMPONENTS Core Network)
 
-# Source files
-set(SOURCES
-    src/main.cpp
-    src/TcpTestClient.cpp
+# Common/shared source files
+set(COMMON_SOURCES
     src/AsterixMessage.cpp
     src/HexDumper.cpp
     src/TimingStats.cpp
 )
 
-set(HEADERS
-    src/TcpTestClient.h
+set(COMMON_HEADERS
     src/AsterixMessage.h
     src/HexDumper.h
     src/TimingStats.h
 )
 
-# Create executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+# Client-specific files
+set(CLIENT_SOURCES
+    src/main.cpp
+    src/TcpTestClient.cpp
+)
 
-# Link Qt libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE
+set(CLIENT_HEADERS
+    src/TcpTestClient.h
+)
+
+# Server-specific files
+set(SERVER_SOURCES
+    src/server-main.cpp
+    src/TcpServer.cpp
+    src/AsterixDecoder.cpp
+)
+
+set(SERVER_HEADERS
+    src/TcpServer.h
+    src/AsterixDecoder.h
+)
+
+# Create client executable
+add_executable(asterix-tcp-client
+    ${CLIENT_SOURCES}
+    ${CLIENT_HEADERS}
+    ${COMMON_SOURCES}
+    ${COMMON_HEADERS}
+)
+
+# Create server executable
+add_executable(asterix-tcp-server
+    ${SERVER_SOURCES}
+    ${SERVER_HEADERS}
+    ${COMMON_SOURCES}
+    ${COMMON_HEADERS}
+)
+
+# Link Qt libraries to client
+target_link_libraries(asterix-tcp-client PRIVATE
+    Qt5::Core
+    Qt5::Network
+)
+
+# Link Qt libraries to server
+target_link_libraries(asterix-tcp-server PRIVATE
     Qt5::Core
     Qt5::Network
 )
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(asterix-tcp-client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(asterix-tcp-server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Output directory
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set_target_properties(asterix-tcp-client PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+set_target_properties(asterix-tcp-server PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

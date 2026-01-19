@@ -1,9 +1,18 @@
-# ASTERIX TCP Test Client
+# ASTERIX TCP Client & Server
 
-A Qt-based console application for testing ASTERIX message transmission to TCP servers. This application allows you to send ASTERIX-formatted binary messages, view hex dumps, and measure connection/transmission timings.
+A complete Qt-based console application suite for testing ASTERIX message transmission. Includes both a **client** for sending messages and a **server** for receiving and decoding them.
+
+## Components
+
+### 1. ASTERIX TCP Client (`asterix-tcp-client`)
+Interactive console application for sending ASTERIX messages to a TCP server.
+
+### 2. ASTERIX TCP Server (`asterix-tcp-server`)
+TCP server that listens for incoming connections, receives ASTERIX messages, and displays decoded message details.
 
 ## Features
 
+### Client Features
 - **Send ASTERIX CAT messages** to TCP server (localhost:3000)
 - **Hex dump display** of sent data with offset, hex, and ASCII columns
 - **Timing measurements** for connection establishment and transmission
@@ -11,6 +20,15 @@ A Qt-based console application for testing ASTERIX message transmission to TCP s
 - **Detailed statistics reporting** with min/max/average timings
 - **Multiple sample messages** (CAT 001, CAT 034, CAT 048)
 - **Customizable message types** for different testing scenarios
+
+### Server Features
+- **Listen on localhost:3000** for incoming ASTERIX messages
+- **Decode ASTERIX messages** (CAT/LEN/FSPEC/DATA format)
+- **Display decoded information** with category name and details
+- **Binary FSPEC visualization** showing field presence indicators
+- **Hex dump display** of received messages
+- **Connection tracking** with client address information
+- **Statistics** showing total messages and bytes received
 
 ## Requirements
 
@@ -31,7 +49,9 @@ mkdir build && cd build
 cmake ..
 make
 
-# The executable will be in build/bin/asterix-tcp-client
+# Two executables will be created:
+# - build/bin/asterix-tcp-client (the client)
+# - build/bin/asterix-tcp-server (the server)
 ```
 
 ### Windows (Visual Studio)
@@ -44,13 +64,37 @@ cmake --build . --config Release
 
 ## Usage
 
-### Starting the Application
+### Running Both Applications in Parallel Terminals
 
+The typical usage is to run the server in one terminal and the client in another:
+
+**Terminal 1 - Start the Server:**
+```bash
+./build/bin/asterix-tcp-server
+```
+
+Output:
+```
+╔════════════════════════════════════════════╗
+║     ASTERIX TCP Server v1.0                ║
+║     Listening for ASTERIX messages         ║
+╚════════════════════════════════════════════╝
+Qt Version: 5.15.13
+
+[SERVER STARTED]
+  Address: 127.0.0.1
+  Port:    3000
+
+Waiting for ASTERIX messages...
+(Press Ctrl+C to stop)
+```
+
+**Terminal 2 - Start the Client:**
 ```bash
 ./build/bin/asterix-tcp-client
 ```
 
-The application will present an interactive menu:
+The client will present an interactive menu:
 
 ```
 === ASTERIX TCP Test Client v1.0 ===
@@ -84,12 +128,45 @@ Enter choice:
 
 ### Example Session
 
+**Terminal 1 - Server Output:**
 ```bash
-# Terminal 1: Start your ASTERIX TCP server
-node server.js  # or your server implementation
+./build/bin/asterix-tcp-server
 
-# Terminal 2: Run the test client
+[CLIENT CONNECTED] 127.0.0.1:45678
+────────────────────────────────────────────
+
+╔════════════════════════════════════════════╗
+║  MESSAGE #1                                ║
+╚════════════════════════════════════════════╝
+╔════════════════════════════════════════════╗
+║         DECODED ASTERIX MESSAGE            ║
+╚════════════════════════════════════════════╝
+
+Category:     48 (0x30)
+Description:  Monoradar Target Reports
+Length:       6 bytes
+
+FSPEC (1 bytes): 80
+  Binary: 10000000
+
+Data Items (2 bytes):
+  Hex: 01 02
+
+Complete message hex dump:
+00000000  30 00 06 80 01 02                                 |48.....|
+
+[STATISTICS]
+  Total messages received: 1
+  Total bytes received:    6
+```
+
+**Terminal 2 - Client Output:**
+```bash
 ./build/bin/asterix-tcp-client
+
+# Select option 7 to change to CAT 048 message
+Enter choice: 7
+Enter choice: 4  # Select Sample CAT 048
 
 # Select option 1 to send a single message
 Enter choice: 1
@@ -97,10 +174,10 @@ Enter choice: 1
 Connecting to 127.0.0.1:3000...
 Connected! Sending message...
 [SUCCESS] Message sent!
-Connection: 2ms | Send: 1ms | Bytes: 12 | Throughput: 12.00 KB/s
+Connection: 0ms | Send: 0ms | Bytes: 6 | Throughput: 0.00 KB/s
 
 Hex dump of sent data:
-00000000  01 00 0C 80 01 02 03 04  05 06 07 08              |............|
+00000000  30 00 06 80 01 02                                 |48.....|
 ```
 
 ## Customizing Test Messages
@@ -162,43 +239,16 @@ Default settings (hardcoded in `TcpTestClient.h`):
 
 To change these, modify the constants in `src/TcpTestClient.h` and rebuild.
 
-## Testing with a Simple Server
+## Server Details
 
-You can test the client with a simple TCP server. Here's a Node.js example:
+The included Qt TCP server (`asterix-tcp-server`) provides complete ASTERIX message decoding:
 
-```javascript
-// server.js
-const net = require('net');
-
-const server = net.createServer((socket) => {
-  console.log('Client connected');
-
-  socket.on('data', (data) => {
-    console.log('Received:', data.length, 'bytes');
-    console.log('Hex:', data.toString('hex'));
-
-    // Parse ASTERIX header
-    const cat = data[0];
-    const len = (data[1] << 8) | data[2];
-    console.log(`CAT: ${cat}, Length: ${len}`);
-  });
-
-  socket.on('end', () => {
-    console.log('Client disconnected');
-  });
-});
-
-server.listen(3000, '127.0.0.1', () => {
-  console.log('Server listening on 127.0.0.1:3000');
-});
-```
-
-Run the server:
-```bash
-node server.js
-```
-
-Then run the client in another terminal and test the connection.
+- **Automatic FSPEC parsing**: Handles variable-length FSPEC with FX extension bits
+- **Category identification**: Recognizes standard ASTERIX categories (001, 002, 034, 048, 062, 063)
+- **Binary visualization**: Shows FSPEC bits in binary format for easy field identification
+- **Complete hex dumps**: Displays both the parsed components and complete message
+- **Error handling**: Validates message structure and reports decoding errors
+- **Multiple clients**: Supports concurrent connections from multiple clients
 
 ## Project Structure
 
@@ -208,18 +258,24 @@ Then run the client in another terminal and test the connection.
 ├── README.md                   # This file
 ├── qt-tcp-client-development-plan.md  # Detailed development plan
 ├── src/
-│   ├── main.cpp                # Main entry point and interactive menu
+│   ├── main.cpp                # Client entry point and interactive menu
+│   ├── server-main.cpp         # Server entry point
 │   ├── TcpTestClient.h         # TCP client class header
 │   ├── TcpTestClient.cpp       # TCP client implementation
+│   ├── TcpServer.h             # TCP server class header
+│   ├── TcpServer.cpp           # TCP server implementation
 │   ├── AsterixMessage.h        # ASTERIX message builder header
 │   ├── AsterixMessage.cpp      # ASTERIX message implementation
+│   ├── AsterixDecoder.h        # ASTERIX message decoder header
+│   ├── AsterixDecoder.cpp      # ASTERIX message decoder implementation
 │   ├── HexDumper.h             # Hex dump utility header
 │   ├── HexDumper.cpp           # Hex dump implementation
 │   ├── TimingStats.h           # Timing statistics header
 │   └── TimingStats.cpp         # Timing statistics implementation
 └── build/                      # Build directory (generated)
     └── bin/
-        └── asterix-tcp-client  # Compiled executable
+        ├── asterix-tcp-client  # Client executable
+        └── asterix-tcp-server  # Server executable
 ```
 
 ## Troubleshooting
@@ -228,7 +284,14 @@ Then run the client in another terminal and test the connection.
 
 **Problem**: `[ERROR] Connection refused - is the server running?`
 
-**Solution**: Ensure your TCP server is running on localhost:3000 before starting the client.
+**Solution**: Ensure the ASTERIX TCP server is running before starting the client:
+```bash
+# Terminal 1 - Start the server first
+./build/bin/asterix-tcp-server
+
+# Terminal 2 - Then start the client
+./build/bin/asterix-tcp-client
+```
 
 ### Qt Not Found (CMake Error)
 

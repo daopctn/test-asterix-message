@@ -65,6 +65,14 @@ add_executable(asterix-tcp-server
     ${COMMON_HEADERS}
 )
 
+# Create simple client executable (no interactive menu)
+add_executable(simple-client
+    src/simple-client.cpp
+    src/TcpTestClient.cpp
+    ${COMMON_SOURCES}
+    ${COMMON_HEADERS}
+)
+
 # Link Qt libraries to client
 target_link_libraries(asterix-tcp-client PRIVATE
     Qt5::Core
@@ -77,9 +85,16 @@ target_link_libraries(asterix-tcp-server PRIVATE
     Qt5::Network
 )
 
+# Link Qt libraries to simple client
+target_link_libraries(simple-client PRIVATE
+    Qt5::Core
+    Qt5::Network
+)
+
 # Include directories
 target_include_directories(asterix-tcp-client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(asterix-tcp-server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(simple-client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Output directory
 set_target_properties(asterix-tcp-client PROPERTIES
@@ -87,5 +102,9 @@ set_target_properties(asterix-tcp-client PROPERTIES
 )
 
 set_target_properties(asterix-tcp-server PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+set_target_properties(simple-client PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

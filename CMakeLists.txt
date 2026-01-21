@@ -73,6 +73,11 @@ add_executable(simple-client
     ${COMMON_HEADERS}
 )
 
+# Create bare socket client (minimal, no extra classes)
+add_executable(bare-socket-client
+    src/bare-socket-client.cpp
+)
+
 # Link Qt libraries to client
 target_link_libraries(asterix-tcp-client PRIVATE
     Qt5::Core
@@ -87,6 +92,12 @@ target_link_libraries(asterix-tcp-server PRIVATE
 
 # Link Qt libraries to simple client
 target_link_libraries(simple-client PRIVATE
+    Qt5::Core
+    Qt5::Network
+)
+
+# Link Qt libraries to bare socket client
+target_link_libraries(bare-socket-client PRIVATE
     Qt5::Core
     Qt5::Network
 )
@@ -106,5 +117,9 @@ set_target_properties(asterix-tcp-server PROPERTIES
 )
 
 set_target_properties(simple-client PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+set_target_properties(bare-socket-client PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
